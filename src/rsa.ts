@@ -35,7 +35,7 @@ export class RsaPublicKey {
   }
 }
 
-interface rsaKeyPair {
+export interface rsaKeyPair {
   publicKey: RsaPublicKey
   privateKey: RsaPrivateKey
 }

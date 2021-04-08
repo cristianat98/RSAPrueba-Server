@@ -4,7 +4,7 @@
   "description": "my rsa server",
   "main": "app.js",
   "scripts": {
-    "start": "ts-node app.ts"
+    "start": "tsc-watch --onSuccess \"node dist/app.js\""
   },
   "keywords": [
     "rsa",
@@ -16,7 +16,8 @@
     "bigint-conversion": "^2.1.12",
     "bigint-crypto-utils": "^3.0.9",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "tsc-watch": "^4.2.9"
   },
   "devDependencies": {
     "@types/cors": "^2.8.10",

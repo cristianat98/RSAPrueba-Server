@@ -15,14 +15,19 @@ app.get('/', (req, res) => {
   res.send('hello world')
 })
 
+interface MensajeOutput {
+  usuario: string
+  mensaje: string
+  iv: string
+}
 app.post('/mensaje', async (req, res) => {
   console.log("MENSAJE RECIBIDO CIFRADO: " + req.body.mensaje)
   let mensaje: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.mensaje))
   console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bigintToText(mensaje))
-  const cifrado = await aes.encrypt(bigintConversion.bigintToText(mensaje))
-  const resultado = {
+  const cifrado = await aes.encrypt(bigintConversion.bigintToBuf(mensaje) as Buffer) 
+  const resultado: MensajeOutput = {
     usuario: req.body.usuario,
-    mensaje: cifrado.cifrado,
+    mensaje: cifrado.cifrado + cifrado.authTag,
     iv: cifrado.iv
   }
   console.log("MENSAJE ENVIADO CIFRADO: " + resultado.mensaje)
@@ -41,10 +46,10 @@ app.get('/rsa', async function (req, res) {
 })
 
 app.get('/aes', async function (req, res) {
-  const cifrado = await aes.encrypt("Hola Mundo")
+  const cifrado = await aes.encrypt(bigintConversion.textToBuf("Hola Mundo") as Buffer)
   console.log("Cifrado: " + cifrado.cifrado);
-  const mensaje = await aes.decrypt(cifrado.cifrado, cifrado.iv)
-  console.log("Mensaje: " + mensaje)
+  const mensaje = await aes.decrypt(bigintConversion.hexToBuf(cifrado.cifrado) as Buffer, bigintConversion.hexToBuf(cifrado.iv) as Buffer, bigintConversion.hexToBuf(cifrado.authTag) as Buffer)
+  console.log("Mensaje: " + bigintConversion.bufToText(mensaje))
 })
 
 app.get('/user', (req, res) => {

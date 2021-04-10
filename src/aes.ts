@@ -5,8 +5,8 @@ const keyHex: string = "95442fa551e13eacedea3e79f0ec1e63513cc14a9dbc4939ad70ceb7
 const key: Buffer = Buffer.from(keyHex, 'hex')
 
 export interface DatosCifrado {
-    cifrado: string,
-    iv: string,
+    cifrado: string
+    iv: string
     authTag: string
 }
 

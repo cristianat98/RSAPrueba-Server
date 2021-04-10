@@ -52,6 +52,13 @@ app.get('/aes', async function (req, res) {
   console.log("Cifrado: " + cifrado.cifrado);
   const mensaje: Buffer = await aes.decrypt(bigintConversion.hexToBuf(cifrado.cifrado) as Buffer, bigintConversion.hexToBuf(cifrado.iv) as Buffer, bigintConversion.hexToBuf(cifrado.authTag) as Buffer)
   console.log("Mensaje: " + bigintConversion.bufToText(mensaje))
+  res.json({
+    mensajes: {
+      mensaje: "Hola Mundo",
+      cifrado: cifrado,
+      descifrado: bigintConversion.bufToText(mensaje)
+    }
+  })
 })
 
 app.get('/user', (req, res) => {

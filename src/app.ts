@@ -22,11 +22,25 @@ interface MensajeOutput {
   iv: string
 }
 
-app.post('/mensaje', async (req, res) => {
+app.post('/mensajeRSA', async (req, res) => {
   console.log("MENSAJE RECIBIDO CIFRADO: " + req.body.mensaje)
   const mensaje: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.mensaje))
   console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bigintToText(mensaje))
   const cifrado: aes.DatosCifrado = await aes.encrypt(bigintConversion.bigintToBuf(mensaje) as Buffer) 
+  const enviar: MensajeOutput = {
+    usuario: req.body.usuario,
+    mensaje: cifrado.cifrado + cifrado.authTag,
+    iv: cifrado.iv
+  }
+  console.log("MENSAJE ENVIADO CIFRADO: " + enviar.mensaje)
+  res.json(enviar);
+})
+
+app.post('/mensajeAES', async (req, res) => {
+  console.log("MENSAJE RECIBIDO CIFRADO: " + req.body.mensaje)
+  const mensajeBuffer: Buffer = await aes.decrypt(bigintConversion.hexToBuf(req.body.mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(req.body.tag) as Buffer)
+  console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeBuffer)) 
+  const cifrado: aes.DatosCifrado = await aes.encrypt(mensajeBuffer) 
   const enviar: MensajeOutput = {
     usuario: req.body.usuario,
     mensaje: cifrado.cifrado + cifrado.authTag,

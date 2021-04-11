@@ -19,14 +19,26 @@ app.get('/', (req, res) => {
 interface MensajeOutput {
   usuario: string
   mensaje: string
-  iv: string
+  iv?: string
 }
 
-app.post('/mensajeRSA', async (req, res) => {
+app.post('/mensaje', async (req, res) => {
+  console.log("CIFRADO RECIBIDO: " + req.body.cifrado)
   console.log("MENSAJE RECIBIDO CIFRADO: " + req.body.mensaje)
-  const mensaje: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.mensaje))
-  console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bigintToText(mensaje))
-  const cifrado: aes.DatosCifrado = await aes.encrypt(bigintConversion.bigintToBuf(mensaje) as Buffer) 
+  let cifrado: aes.DatosCifrado
+  
+  if (req.body.cifrado === "AES"){
+    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(req.body.mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(req.body.tag) as Buffer)
+    console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeDescifrado))
+    cifrado = await aes.encrypt(mensajeDescifrado)
+  }
+
+  else{
+    const mensajeDescifrado: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.mensaje))
+    console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bigintToText(mensajeDescifrado))
+    cifrado = await aes.encrypt(bigintConversion.bigintToBuf(mensajeDescifrado) as Buffer)
+  }
+
   const enviar: MensajeOutput = {
     usuario: req.body.usuario,
     mensaje: cifrado.cifrado + cifrado.authTag,
@@ -36,18 +48,16 @@ app.post('/mensajeRSA', async (req, res) => {
   res.json(enviar);
 })
 
-app.post('/mensajeAES', async (req, res) => {
-  console.log("MENSAJE RECIBIDO CIFRADO: " + req.body.mensaje)
-  const mensajeBuffer: Buffer = await aes.decrypt(bigintConversion.hexToBuf(req.body.mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(req.body.tag) as Buffer)
-  console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeBuffer)) 
-  const cifrado: aes.DatosCifrado = await aes.encrypt(mensajeBuffer) 
+app.post('/firma', async (req, res) => {
+  console.log("SE FIRMARÁ EL SIGUIENTE MENSAJE: " + req.body.mensaje)
+  const firma: bigint = keyprivate.sign(bigintConversion.hexToBigint(req.body.mensaje))
   const enviar: MensajeOutput = {
     usuario: req.body.usuario,
-    mensaje: cifrado.cifrado + cifrado.authTag,
-    iv: cifrado.iv
+    mensaje: bigintConversion.bigintToHex(firma)
   }
-  console.log("MENSAJE ENVIADO CIFRADO: " + enviar.mensaje)
-  res.json(enviar);
+
+  console.log("MENSAJE FIRMADO: " + enviar.mensaje)
+  res.json(enviar)
 })
 
 app.get('/rsa', async function (req, res) {

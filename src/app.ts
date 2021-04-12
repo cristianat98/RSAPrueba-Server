@@ -28,7 +28,9 @@ app.post('/mensaje', async (req, res) => {
   let cifrado: aes.DatosCifrado
   
   if (req.body.cifrado === "AES"){
-    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(req.body.mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(req.body.tag) as Buffer)
+    const mensaje: string = req.body.mensaje.slice(0, req.body.mensaje.length - 32)
+    const tag: string = req.body.mensaje.slice(req.body.mensaje.length - 32, req.body.mensaje.length)
+    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer)
     console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeDescifrado))
     cifrado = await aes.encrypt(mensajeDescifrado)
   }
@@ -64,10 +66,8 @@ app.get('/rsa', async function (req, res) {
   const rsaKeys: rsa.rsaKeyPair = await rsa.generateKeys(2048)
   keyprivate = rsaKeys.privateKey;
   res.json({
-    publicKey: {
-      e: bigintConversion.bigintToHex(rsaKeys.publicKey.e),
-      n: bigintConversion.bigintToHex(rsaKeys.publicKey.n)
-    } 
+    eHex: bigintConversion.bigintToHex(rsaKeys.publicKey.e),
+    nHex: bigintConversion.bigintToHex(rsaKeys.publicKey.n)
   })
 })
 

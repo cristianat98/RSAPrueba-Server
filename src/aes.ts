@@ -22,9 +22,15 @@ export const encrypt = async function (mensaje: Buffer): Promise<DatosCifrado> {
     };
 }
 
-export const decrypt = async function (cifrado: Buffer, iv: Buffer, authTag: Buffer): Promise<Buffer> {
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+export const decrypt = async function (cifrado: Buffer, iv: Buffer, authTag: Buffer, keyTemporal?: Buffer): Promise<Buffer> {
+    let decipher;
+    if (keyTemporal == undefined)
+        decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
+    
+    else
+        decipher = crypto.createDecipheriv('aes-256-gcm', keyTemporal, iv)
+
     decipher.setAuthTag(authTag)
-    const mensaje: Buffer = Buffer.concat([decipher.update(cifrado), decipher.final()]);
+    const mensaje: Buffer = Buffer.concat([decipher.update(cifrado), decipher.final()])
     return mensaje
 }

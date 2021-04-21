@@ -88,9 +88,12 @@ app.post('/mensaje', async (req, res) => {
   }
 
   else{
-    const mensajeDescifrado: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.mensaje))
-    console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bigintToText(mensajeDescifrado))
-    cifrado = await aes.encrypt(bigintConversion.bigintToBuf(mensajeDescifrado) as Buffer)
+    const claveDescifradaBigint: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.clave))
+    const mensaje: string = req.body.mensaje.slice(0, req.body.mensaje.length - 32)
+    const tag: string = req.body.mensaje.slice(req.body.mensaje.length - 32, req.body.mensaje.length)
+    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer, bigintConversion.bigintToBuf(claveDescifradaBigint) as Buffer)
+    console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeDescifrado))
+    cifrado = await aes.encrypt(mensajeDescifrado)
   }
 
   const enviar: MensajeOutput = {

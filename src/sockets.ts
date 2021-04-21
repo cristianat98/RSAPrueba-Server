@@ -6,9 +6,9 @@ let sockets: Socket[] = [];
 
 io.on('connection', (socket: Socket) => {
 
-    socket.on('nuevoConectado', (usuario: string) => {
-        console.log(usuario + " se ha conectado");
-        socket.join(usuario);
+    socket.on('nuevoConectado', usuario => {
+        console.log(usuario.nombre + " se ha conectado");
+        socket.join(usuario.nombre);
         sockets.push(socket);
         io.emit('nuevoConectado', usuario)
     });

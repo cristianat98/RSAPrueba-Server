@@ -4,9 +4,18 @@ import * as bigintConversion from 'bigint-conversion'
 import * as rsa from './rsa'
 import * as aes from './aes'
 
+//VARIABLES
 const port = 3000
 let keyprivate: rsa.RsaPrivateKey
+let usuarios: string[] = []
 
+interface MensajeOutput {
+  usuario: string
+  mensaje: string
+  iv?: string
+}
+
+//SERVIDOR
 const app = express()
 app.use(cors({
   origin: 'http://localhost:4200' // angular.js server
@@ -16,11 +25,54 @@ app.get('/', (req, res) => {
   res.send('hello world')
 })
 
-interface MensajeOutput {
-  usuario: string
-  mensaje: string
-  iv?: string
-}
+app.post('/conectar', (req, res) => {
+  let i: number = 0;
+  let encontrado: Boolean = false;
+  const usuario: string = req.body.usuario;
+  while (i < usuarios.length && !encontrado){
+    if (usuarios[i] === usuario)
+        encontrado = true;
+
+    else
+        i++;
+  }
+
+  if (encontrado === false){
+    res.json(usuarios)
+    usuarios.push(usuario)
+  }
+
+  else{
+    res.status(409).json("Este usuario ya está conectado")
+  }
+})
+
+app.post('/cambiar', (req, res) => {
+  let i: number = 0;
+  let encontrado: Boolean = false;
+  const usuarioAntiguo: string = req.body.usuarioAntiguo;
+  const usuarioNuevo: string = req.body.usuarioNuevo;
+  while (i < usuarios.length && !encontrado){
+    if (usuarios[i] === usuarioNuevo)
+        encontrado = true;
+
+    else
+        i++;
+  }
+
+  if (encontrado === false){
+    res.json(usuarios)
+    usuarios.forEach(usuarioLista => {
+      if (usuarioLista === usuarioAntiguo){
+        usuarios[usuarios.indexOf(usuarioLista)] = usuarioNuevo;
+      }
+    })
+  }
+
+  else{
+    res.status(409).json("Este usuario ya está conectado")
+  }
+})
 
 app.post('/mensaje', async (req, res) => {
   console.log("CIFRADO RECIBIDO: " + req.body.cifrado)
@@ -93,6 +145,7 @@ app.get('/user', (req, res) => {
   res.json(user)
 })
 
+//SERVIDOR SOCKETS
 const server = require('http').createServer(app);
 module.exports.io = require('socket.io')(server, {
   cors: {

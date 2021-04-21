@@ -1,21 +1,37 @@
+import { Socket } from "socket.io";
+
 const { io } = require('./app')
 
-let sockets: any [] = [];
+let sockets: Socket[] = [];
 
-io.on('connection', (socket: any) => {
-  socket.on('nuevoConectado', (usuario: string) => {
-      socket.usuario = usuario;
-      console.log(socket.usuario + " se ha conectado");
-      sockets.push(socket);
-  });
+io.on('connection', (socket: Socket) => {
 
-  socket.on('cambiarNombre', (usuario: string) => {
-    console.log(socket.usuario + " se ha cambiado el nombre a " + usuario);
-    socket.usuario = usuario;
-  })
-  socket.on('disconnect', function(){
-      console.log(socket.usuario + " se ha desconectado")
-  });
+    socket.on('nuevoConectado', (usuario: string) => {
+        console.log(usuario + " se ha conectado");
+        socket.join(usuario);
+        sockets.push(socket);
+        io.emit('nuevoConectado', usuario)
+    });
+
+    socket.on('cambiarNombre', (usuarios: string []) => {
+        socket.rooms.forEach(sala => {
+            if (sala.toString() === usuarios[0]){
+                socket.leave(usuarios[0]);
+                socket.join(usuarios[1]);
+            }
+        })
+
+        console.log(usuarios[0] + " se ha cambiado el nombre a " + usuarios[1]);
+        io.emit('cambiarNombre', usuarios);
+    });
+
+    socket.on('nuevoMensaje', mensaje => {
+        io.emit('nuevoMensaje', mensaje);
+    })
+
+    socket.on('disconnect', function(){
+        //console.log(socket.usuario + " se ha desconectado")
+    });
 });
 
 function getSocket(){

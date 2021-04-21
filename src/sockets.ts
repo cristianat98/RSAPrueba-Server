@@ -3,13 +3,18 @@ const { io } = require('./app')
 let sockets: any [] = [];
 
 io.on('connection', (socket: any) => {
-
-    console.log("Conectado")
-
-  socket.on('nuevoConectado', () =>{
+  socket.on('nuevoConectado', (usuario: string) => {
+      socket.usuario = usuario;
+      console.log(socket.usuario + " se ha conectado");
+      sockets.push(socket);
   });
 
+  socket.on('cambiarNombre', (usuario: string) => {
+    console.log(socket.usuario + " se ha cambiado el nombre a " + usuario);
+    socket.usuario = usuario;
+  })
   socket.on('disconnect', function(){
+      console.log(socket.usuario + " se ha desconectado")
   });
 });
 

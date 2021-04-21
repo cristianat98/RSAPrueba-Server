@@ -16,7 +16,8 @@
     "bigint-conversion": "^2.1.12",
     "bigint-crypto-utils": "^3.0.9",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "socket.io": "^4.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.10",

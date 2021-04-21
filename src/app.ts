@@ -93,6 +93,15 @@ app.get('/user', (req, res) => {
   res.json(user)
 })
 
-app.listen(port, function () {
+const server = require('http').createServer(app);
+module.exports.io = require('socket.io')(server, {
+  cors: {
+    origin: "http://localhost:4200",
+    methods: ["GET", "POST"]
+  }
+});
+require('./sockets');
+
+server.listen(port, function () {
   console.log(`Listening on http://localhost:${port}`)
 })

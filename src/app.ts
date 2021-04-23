@@ -10,9 +10,11 @@ const port = 3000
 let keyRSA: rsa.rsaKeyPair
 let usuarios: modelos.Usuario[] = []
 
-export const eliminarUsuario = function (posicion: number): void {
+export const eliminarUsuario = function (posicion: number): string {
   console.log(usuarios[posicion].nombre + " se ha desconectado")
-  usuarios.splice(posicion, 1)
+  const usuario: string = usuarios[posicion].nombre;
+  usuarios.splice(posicion, 1);
+  return usuario;
 }
 
 //SERVIDOR
@@ -28,7 +30,7 @@ app.get('/', (req, res) => {
 app.post('/conectar', (req, res) => {
   let i: number = 0;
   let encontrado: Boolean = false;
-  const usuario: modelos.Usuario = req.body.usuario;
+  const usuario: modelos.Usuario = req.body
   while (i < usuarios.length && !encontrado){
     if (usuarios[i].nombre === usuario.nombre)
         encontrado = true;
@@ -62,7 +64,7 @@ app.post('/cambiar', (req, res) => {
 
   if (encontrado === false){
     res.json(usuarios)
-    usuarios.forEach(usuarioLista => {
+    usuarios.forEach((usuarioLista: modelos.Usuario) => {
       if (usuarioLista.nombre === usuarioAntiguo){
         usuarios[usuarios.indexOf(usuarioLista)].nombre = usuarioNuevo;
       }

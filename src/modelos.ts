@@ -14,5 +14,6 @@ export interface MensajeOutput {
 
 export interface Usuario {
     nombre: string
-    publicKey: rsa.RsaPublicKey
+    eHex: string
+    nHex: string
 }

@@ -8,14 +8,14 @@ let sockets: Socket[] = [];
 
 io.on('connection', (socket: Socket) => {
 
-    socket.on('nuevoConectado', usuario => {
+    socket.on('nuevoConectado', (usuario: modelos.Usuario) => {
         console.log(usuario.nombre + " se ha conectado");
         socket.join(usuario.nombre);
         sockets.push(socket);
         io.emit('nuevoConectado', usuario)
     });
 
-    socket.on('cambiarNombre', (usuarios: string []) => {
+    socket.on('cambiarNombre', (usuarios: string[]) => {
         socket.rooms.forEach(sala => {
             if (sala.toString() === usuarios[0]){
                 socket.leave(usuarios[0]);
@@ -32,14 +32,15 @@ io.on('connection', (socket: Socket) => {
     })
 
     socket.on('mensajeCifrado', data => {
-        socket.to(data.usuarioDestino).emit('mensajeCifrado', data)
+        socket.to(data.usuarioDestino).emit('mensajeCifrado', data);
     })
 
     socket.on('disconnect', function(){
         sockets.forEach(socketLista => {
             if (socket === socketLista){
-                app.eliminarUsuario(sockets.indexOf(socketLista))
-                sockets.splice(sockets.indexOf(socketLista), 1)
+                const nombre = app.eliminarUsuario(sockets.indexOf(socketLista));
+                sockets.splice(sockets.indexOf(socketLista), 1);
+                io.emit('desconectado', nombre);
             }
         })
     });

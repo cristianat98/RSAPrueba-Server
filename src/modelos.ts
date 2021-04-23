@@ -1,3 +1,5 @@
+import * as rsa from './rsa'
+
 export interface DatosCifrado {
     cifrado: string
     iv: string
@@ -9,3 +11,8 @@ export interface MensajeOutput {
     mensaje: string
     iv?: string
   }
+
+export interface Usuario {
+    nombre: string
+    publicKey: rsa.RsaPublicKey
+}

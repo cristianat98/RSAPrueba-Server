@@ -8,10 +8,10 @@ import * as modelos from './modelos'
 //VARIABLES
 const port = 3000
 let keyRSA: rsa.rsaKeyPair
-let usuarios: string[] = []
+let usuarios: modelos.Usuario[] = []
 
 export const eliminarUsuario = function (posicion: number): void {
-  console.log(usuarios[posicion] + " se ha desconectado")
+  console.log(usuarios[posicion].nombre + " se ha desconectado")
   usuarios.splice(posicion, 1)
 }
 
@@ -28,9 +28,9 @@ app.get('/', (req, res) => {
 app.post('/conectar', (req, res) => {
   let i: number = 0;
   let encontrado: Boolean = false;
-  const usuario: string = req.body.usuario;
+  const usuario: modelos.Usuario = req.body.usuario;
   while (i < usuarios.length && !encontrado){
-    if (usuarios[i] === usuario)
+    if (usuarios[i].nombre === usuario.nombre)
         encontrado = true;
 
     else
@@ -53,7 +53,7 @@ app.post('/cambiar', (req, res) => {
   const usuarioAntiguo: string = req.body.usuarioAntiguo;
   const usuarioNuevo: string = req.body.usuarioNuevo;
   while (i < usuarios.length && !encontrado){
-    if (usuarios[i] === usuarioNuevo)
+    if (usuarios[i].nombre === usuarioNuevo)
         encontrado = true;
 
     else
@@ -63,8 +63,8 @@ app.post('/cambiar', (req, res) => {
   if (encontrado === false){
     res.json(usuarios)
     usuarios.forEach(usuarioLista => {
-      if (usuarioLista === usuarioAntiguo){
-        usuarios[usuarios.indexOf(usuarioLista)] = usuarioNuevo;
+      if (usuarioLista.nombre === usuarioAntiguo){
+        usuarios[usuarios.indexOf(usuarioLista)].nombre = usuarioNuevo;
       }
     })
   }

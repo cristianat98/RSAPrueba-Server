@@ -1,5 +1,6 @@
 import { Socket } from "socket.io";
 import * as app from './app'
+import * as modelos from './modelos'
 
 const { io } = require('./app')
 
@@ -28,6 +29,10 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('nuevoMensaje', mensaje => {
         io.emit('nuevoMensaje', mensaje);
+    })
+
+    socket.on('mensajeCifrado', data => {
+        socket.to(data.usuarioDestino).emit('mensajeCifrado', data)
     })
 
     socket.on('disconnect', function(){

@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import * as app from './app'
 
 const { io } = require('./app')
 
@@ -30,7 +31,12 @@ io.on('connection', (socket: Socket) => {
     })
 
     socket.on('disconnect', function(){
-        //console.log(socket.usuario + " se ha desconectado")
+        sockets.forEach(socketLista => {
+            if (socket === socketLista){
+                app.eliminarUsuario(sockets.indexOf(socketLista))
+                sockets.splice(sockets.indexOf(socketLista), 1)
+            }
+        })
     });
 });
 

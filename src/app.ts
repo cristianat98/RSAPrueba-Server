@@ -6,13 +6,18 @@ import * as aes from './aes'
 
 //VARIABLES
 const port = 3000
-let keyprivate: rsa.RsaPrivateKey
+let keyRSA: rsa.rsaKeyPair
 let usuarios: string[] = []
 
 interface MensajeOutput {
   usuario: string
   mensaje: string
   iv?: string
+}
+
+export const eliminarUsuario = function (posicion: number): void {
+  console.log(usuarios[posicion] + " se ha desconectado")
+  usuarios.splice(posicion, 1)
 }
 
 //SERVIDOR
@@ -88,7 +93,7 @@ app.post('/mensaje', async (req, res) => {
   }
 
   else{
-    const claveDescifradaBigint: bigint = keyprivate.decrypt(bigintConversion.hexToBigint(req.body.clave))
+    const claveDescifradaBigint: bigint = keyRSA.privateKey.decrypt(bigintConversion.hexToBigint(req.body.clave))
     const mensaje: string = req.body.mensaje.slice(0, req.body.mensaje.length - 32)
     const tag: string = req.body.mensaje.slice(req.body.mensaje.length - 32, req.body.mensaje.length)
     const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer, bigintConversion.bigintToBuf(claveDescifradaBigint) as Buffer)
@@ -107,7 +112,7 @@ app.post('/mensaje', async (req, res) => {
 
 app.post('/firma', async (req, res) => {
   console.log("SE FIRMARÁ EL SIGUIENTE MENSAJE: " + req.body.mensaje)
-  const firma: bigint = keyprivate.sign(bigintConversion.hexToBigint(req.body.mensaje))
+  const firma: bigint = keyRSA.privateKey.sign(bigintConversion.hexToBigint(req.body.mensaje))
   const enviar: MensajeOutput = {
     usuario: req.body.usuario,
     mensaje: bigintConversion.bigintToHex(firma)
@@ -118,11 +123,12 @@ app.post('/firma', async (req, res) => {
 })
 
 app.get('/rsa', async function (req, res) {
-  const rsaKeys: rsa.rsaKeyPair = await rsa.generateKeys(2048)
-  keyprivate = rsaKeys.privateKey;
+  if (keyRSA === undefined)
+    keyRSA = await rsa.generateKeys(2048)
+
   res.json({
-    eHex: bigintConversion.bigintToHex(rsaKeys.publicKey.e),
-    nHex: bigintConversion.bigintToHex(rsaKeys.publicKey.n)
+    eHex: bigintConversion.bigintToHex(keyRSA.publicKey.e),
+    nHex: bigintConversion.bigintToHex(keyRSA.publicKey.n)
   })
 })
 

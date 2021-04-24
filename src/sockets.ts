@@ -42,7 +42,7 @@ io.on('connection', (socket: Socket) => {
         socket.to(data.usuarioOrigen).emit('contestado', data);
     })
 
-    socket.on('noContestar', (usuario: string) => {
+    socket.on('noContestado', (usuario: string) => {
         console.log(usuario + " no ha contestado");
         socket.to(usuario).emit('noContestado')
     })

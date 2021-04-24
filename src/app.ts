@@ -92,11 +92,7 @@ app.post('/mensaje', async (req, res) => {
   }
 
   else{
-    let claveDescifradaBigint: bigint = 0n;
-
-    if (recibido.clave !== undefined)
-      claveDescifradaBigint = keyRSA.privateKey.decrypt(bigintConversion.hexToBigint(recibido.clave))
-
+    const claveDescifradaBigint: bigint = keyRSA.privateKey.decrypt(bigintConversion.hexToBigint(recibido.clave as string))
     const mensaje: string = recibido.cifrado.slice(0, recibido.cifrado.length - 32)
     const tag: string = recibido.cifrado.slice(recibido.cifrado.length - 32, recibido.cifrado.length)
     const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(recibido.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer, bigintConversion.bigintToBuf(claveDescifradaBigint) as Buffer)
@@ -130,10 +126,30 @@ app.post('/firmar', async (req, res) => {
 app.post('/noRepudio', (req, res) => {
   const recibido: modelos.NoRepudio = req.body;
   usuarios.forEach((usuarioLista: modelos.Usuario) => {
-    /*if (usuarioLista.nombre === recibido.usuarioOrigen){
+    if (usuarioLista.nombre === recibido.usuarioOrigen){
       const clavePublica: rsa.RsaPublicKey = new rsa.RsaPublicKey(bigintConversion.hexToBigint(usuarioLista.eHex), bigintConversion.hexToBigint(usuarioLista.nHex))
+      let respuesta: modelos.NoRepudio = {
+        usuarioOrigen: recibido.usuarioOrigen,
+        usuarioDestino: recibido.usuarioDestino,
+        cifrado: recibido.cifrado,
+        TimeStamp: recibido.TimeStamp
+      }
 
-    }*/
+      var crypto = require('crypto');
+      const hash: string = crypto.createHash('sha256').update(JSON.stringify(respuesta)).digest('hex');
+      const firmaBigint: bigint = clavePublica.verify(bigintConversion.hexToBigint(recibido.firma as string));
+      const firma: string = bigintConversion.bigintToHex(firmaBigint);
+      if (hash === firma){
+        console.log("SE HA ENVIADO LA CLAVE AL USUARIO")
+        respuesta.TimeStamp = new Date(Date.now()).toString();
+        const digest: string = crypto.createHash('sha256').update(JSON.stringify(respuesta)).digest('hex');
+        const firmaBigint: bigint = keyRSA.privateKey.sign(bigintConversion.hexToBigint(digest));
+        respuesta.firma = bigintConversion.bigintToHex(firmaBigint);
+        res.json(respuesta);
+        const io = require('./sockets').getSocket();
+        io.to(respuesta.usuarioDestino).emit('clave', respuesta);
+      }
+    }
   })
 })
 

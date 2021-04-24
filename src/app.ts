@@ -127,6 +127,16 @@ app.post('/firmar', async (req, res) => {
   res.json(enviar)
 })
 
+app.post('/noRepudio', (req, res) => {
+  const recibido: modelos.NoRepudio = req.body;
+  usuarios.forEach((usuarioLista: modelos.Usuario) => {
+    /*if (usuarioLista.nombre === recibido.usuarioOrigen){
+      const clavePublica: rsa.RsaPublicKey = new rsa.RsaPublicKey(bigintConversion.hexToBigint(usuarioLista.eHex), bigintConversion.hexToBigint(usuarioLista.nHex))
+
+    }*/
+  })
+})
+
 app.get('/rsa', async function (req, res) {
   if (keyRSA === undefined)
     keyRSA = await rsa.generateKeys(2048)

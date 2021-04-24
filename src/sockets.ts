@@ -37,8 +37,9 @@ io.on('connection', (socket: Socket) => {
         socket.to(data.usuarioDestino).emit('mensajeCifrado', data);
     })
 
-    socket.on('contestar', (data: modelos.Mensaje) => {
-        console.log(data.usuario)
+    socket.on('contestar', (data: modelos.NoRepudio) => {
+        console.log(data.usuarioDestino + " quiere recibir el mensaje de " + data.usuarioOrigen)
+        socket.to(data.usuarioOrigen).emit('contestado', data);
     })
 
     socket.on('noContestar', (usuario: string) => {
@@ -61,9 +62,4 @@ function getSocket(){
   return io;
 }
 
-function getVectorSockets(){
-  return sockets;
-}
-
 module.exports.getSocket = getSocket;
-module.exports.getVectorSockets = getVectorSockets;

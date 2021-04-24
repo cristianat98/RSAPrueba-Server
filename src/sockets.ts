@@ -27,12 +27,23 @@ io.on('connection', (socket: Socket) => {
         io.emit('cambiarNombre', usuarios);
     });
 
-    socket.on('nuevoMensaje', mensaje => {
+    socket.on('nuevoMensaje', (mensaje: modelos.MensajeServidor) => {
+        console.log(mensaje.usuario + " ha enviado un mensaje")
         io.emit('nuevoMensaje', mensaje);
     })
 
-    socket.on('mensajeCifrado', data => {
+    socket.on('mensajeCifrado', (data: modelos.NoRepudio) => {
+        console.log(data.usuarioOrigen + " quiere enviar un mensaje a " + data.usuarioDestino)
         socket.to(data.usuarioDestino).emit('mensajeCifrado', data);
+    })
+
+    socket.on('contestar', (data: modelos.Mensaje) => {
+        console.log(data.usuario)
+    })
+
+    socket.on('noContestar', (usuario: string) => {
+        console.log(usuario + " no ha contestado");
+        socket.to(usuario).emit('noContestado')
     })
 
     socket.on('disconnect', function(){

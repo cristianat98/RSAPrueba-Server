@@ -77,40 +77,48 @@ app.post('/cambiar', (req, res) => {
 })
 
 app.post('/mensaje', async (req, res) => {
-  console.log("CIFRADO RECIBIDO: " + req.body.cifrado)
-  console.log("MENSAJE RECIBIDO CIFRADO: " + req.body.mensaje)
-  let cifrado: modelos.DatosCifrado
+  const recibido: modelos.MensajeServidor = req.body;
+  console.log("CIFRADO RECIBIDO: " + recibido.tipo)
+  console.log("MENSAJE RECIBIDO CIFRADO: " + recibido.cifrado)
+  let cifrado: modelos.cifradoAES;
   
-  if (req.body.cifrado === "AES"){
-    const mensaje: string = req.body.mensaje.slice(0, req.body.mensaje.length - 32)
-    const tag: string = req.body.mensaje.slice(req.body.mensaje.length - 32, req.body.mensaje.length)
-    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer)
+  if (recibido.tipo === "AES"){
+    const mensaje: string = recibido.cifrado.slice(0, recibido.cifrado.length - 32)
+    const tag: string = recibido.cifrado.slice(recibido.cifrado.length - 32, recibido.cifrado.length)
+    console.log(mensaje + " " + tag);
+    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(recibido.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer)
     console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeDescifrado))
     cifrado = await aes.encrypt(mensajeDescifrado)
   }
 
   else{
-    const claveDescifradaBigint: bigint = keyRSA.privateKey.decrypt(bigintConversion.hexToBigint(req.body.clave))
-    const mensaje: string = req.body.mensaje.slice(0, req.body.mensaje.length - 32)
-    const tag: string = req.body.mensaje.slice(req.body.mensaje.length - 32, req.body.mensaje.length)
-    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(req.body.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer, bigintConversion.bigintToBuf(claveDescifradaBigint) as Buffer)
+    let claveDescifradaBigint: bigint = 0n;
+
+    if (recibido.clave !== undefined)
+      claveDescifradaBigint = keyRSA.privateKey.decrypt(bigintConversion.hexToBigint(recibido.clave))
+
+    const mensaje: string = recibido.cifrado.slice(0, recibido.cifrado.length - 32)
+    const tag: string = recibido.cifrado.slice(recibido.cifrado.length - 32, recibido.cifrado.length)
+    const mensajeDescifrado: Buffer = await aes.decrypt(bigintConversion.hexToBuf(mensaje) as Buffer, bigintConversion.hexToBuf(recibido.iv) as Buffer, bigintConversion.hexToBuf(tag) as Buffer, bigintConversion.bigintToBuf(claveDescifradaBigint) as Buffer)
     console.log("MENSAJE RECIBIDO DESCIFRADO: " + bigintConversion.bufToText(mensajeDescifrado))
     cifrado = await aes.encrypt(mensajeDescifrado)
   }
 
-  const enviar: modelos.MensajeOutput = {
-    usuario: req.body.usuario,
-    mensaje: cifrado.cifrado + cifrado.authTag,
+  const enviar: modelos.MensajeServidor = {
+    usuario: recibido.usuario,
+    tipo: recibido.tipo,
+    cifrado: cifrado.cifrado + cifrado.authTag,
     iv: cifrado.iv
   }
-  console.log("MENSAJE ENVIADO CIFRADO: " + enviar.mensaje)
+
+  console.log("MENSAJE ENVIADO CIFRADO: " + enviar.cifrado)
   res.json(enviar);
 })
 
-app.post('/firma', async (req, res) => {
+app.post('/firmar', async (req, res) => {
   console.log("SE FIRMARÁ EL SIGUIENTE MENSAJE: " + req.body.mensaje)
   const firma: bigint = keyRSA.privateKey.sign(bigintConversion.hexToBigint(req.body.mensaje))
-  const enviar: modelos.MensajeOutput = {
+  const enviar: modelos.Mensaje = {
     usuario: req.body.usuario,
     mensaje: bigintConversion.bigintToHex(firma)
   }
@@ -130,7 +138,7 @@ app.get('/rsa', async function (req, res) {
 })
 
 app.get('/aes', async function (req, res) {
-  const cifrado: modelos.DatosCifrado = await aes.encrypt(bigintConversion.textToBuf("Hola Mundo") as Buffer)
+  const cifrado: modelos.cifradoAES = await aes.encrypt(bigintConversion.textToBuf("Hola Mundo") as Buffer)
   console.log("Cifrado: " + cifrado.cifrado);
   const mensaje: Buffer = await aes.decrypt(bigintConversion.hexToBuf(cifrado.cifrado) as Buffer, bigintConversion.hexToBuf(cifrado.iv) as Buffer, bigintConversion.hexToBuf(cifrado.authTag) as Buffer)
   console.log("Mensaje: " + bigintConversion.bufToText(mensaje))

@@ -1,19 +1,33 @@
 import * as rsa from './rsa'
 
-export interface DatosCifrado {
+export interface cifradoAES {
     cifrado: string
     iv: string
     authTag: string
 }
 
-export interface MensajeOutput {
-    usuario: string
-    mensaje: string
-    iv?: string
-  }
-
 export interface Usuario {
     nombre: string
     eHex: string
     nHex: string
+}
+
+export interface MensajeServidor {
+    usuario: string
+    tipo: string
+    cifrado: string
+    iv: string
+    clave?: string
+}
+
+export interface Mensaje {
+    usuario: string
+    mensaje: string
+}
+
+export interface NoRepudio {
+    usuarioOrigen: string
+    usuarioDestino: string
+    cifrado: string
+    firma: string
 }

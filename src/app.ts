@@ -153,6 +153,39 @@ app.post('/noRepudio', (req, res) => {
   })
 })
 
+app.get('/secretoCompartido', function (req, res) {
+  const sss = require('shamirs-secret-sharing');
+  const secret: Buffer = Buffer.from('Secreto Compartido');
+  const shares: Buffer[] = sss.split(secret, { shares: 10, threshold: 5});
+  const sharesHex: string[] = [];
+  shares.forEach((share: Buffer) => {
+    sharesHex.push(bigintConversion.bufToHex(share));
+  })
+  const sharesRecuperadasHex: string[] = [];
+
+  //NO REPETIR CLAVES USADAS
+  sharesRecuperadasHex.push(sharesHex[0]);
+  sharesRecuperadasHex.push(sharesHex[1]);
+  sharesRecuperadasHex.push(sharesHex[2]);
+  sharesRecuperadasHex.push(sharesHex[3]);
+  sharesRecuperadasHex.push(sharesHex[4]);
+
+  const sharesRecuperadas: Buffer[] = [];
+  sharesRecuperadasHex.forEach((shareHex: string) => {
+    sharesRecuperadas.push(bigintConversion.hexToBuf(shareHex) as Buffer)
+  });
+
+  const recovered = sss.combine(sharesRecuperadas)
+  console.log(recovered.toString())
+  const enviar = {
+    secretoCompartido: "Secreto Compartido",
+    claves: sharesHex,
+    clavesUsadas: sharesRecuperadasHex,
+    secretoRecuperado: recovered.toString()
+  }
+  res.json(enviar)
+})
+
 app.get('/rsa', async function (req, res) {
   if (keyRSA === undefined)
     keyRSA = await rsa.generateKeys(2048)

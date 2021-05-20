@@ -153,6 +153,25 @@ app.post('/noRepudio', (req, res) => {
   })
 })
 
+app.get('/cifradoHomomorfico', async function(req, res) {
+  const paillierBigint = require('paillier-bigint');
+  const { publicKeyPaillier, privateKeyPaillier } = await paillierBigint.generateRandomKeys(3072)
+  const m1: bigint = 10n;
+  const m2: bigint = 5n;
+
+  const c1 = publicKeyPaillier.encrypt(m1)
+  const c2 = publicKeyPaillier.encrypt(m2)
+  const encryptedSum = publicKeyPaillier.addition(c1, c2)
+  console.log(privateKeyPaillier.decrypt("encriptado: " + encryptedSum))
+
+  const k = 10n
+  const encryptedMul = publicKeyPaillier.multiply(c1, k)
+  console.log(privateKeyPaillier.decrypt(encryptedMul))
+  res.json({
+    mensaje: "EN PROCESO"
+  })
+})
+
 app.get('/secretoCompartido', function (req, res) {
   const sss = require('shamirs-secret-sharing');
   const secret: Buffer = Buffer.from('Secreto Compartido');
@@ -163,7 +182,7 @@ app.get('/secretoCompartido', function (req, res) {
   })
   const sharesRecuperadasHex: string[] = [];
 
-  //NO REPETIR CLAVES USADAS
+  //NO REPETIR CLAVES
   sharesRecuperadasHex.push(sharesHex[0]);
   sharesRecuperadasHex.push(sharesHex[1]);
   sharesRecuperadasHex.push(sharesHex[2]);
@@ -176,7 +195,6 @@ app.get('/secretoCompartido', function (req, res) {
   });
 
   const recovered = sss.combine(sharesRecuperadas)
-  console.log(recovered.toString())
   const enviar = {
     secretoCompartido: "Secreto Compartido",
     claves: sharesHex,

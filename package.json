@@ -17,6 +17,7 @@
     "bigint-crypto-utils": "^3.0.9",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "paillier-bigint": "^3.2.3",
     "shamirs-secret-sharing": "^1.0.1",
     "socket.io": "^4.0.1"
   },

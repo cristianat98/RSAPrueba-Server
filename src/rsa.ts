@@ -21,9 +21,12 @@ export class RsaPrivateKey {
 export class RsaPublicKey {
   e: bigint
   n: bigint
+  n2: bigint
+
   constructor (e: bigint, n: bigint) {
     this.e = e
     this.n = n
+    this.n2 = this.n ** 2n // cache n^2
   }
 
   encrypt (m: bigint): bigint {

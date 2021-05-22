@@ -4,11 +4,16 @@ import * as bigintConversion from 'bigint-conversion'
 import * as rsa from './rsa'
 import * as aes from './aes'
 import * as modelos from './modelos'
+import { PrivateKey, PublicKey } from 'paillier-bigint'
 
 //VARIABLES
 const port = 3000
 let keyRSA: rsa.rsaKeyPair
 let usuarios: modelos.Usuario[] = []
+let publicKeyPailler: PublicKey;
+let privateKeyPailler: PrivateKey;
+let votos: bigint;
+let numVotos: number = 0;
 
 export const eliminarUsuario = function (posicion: number): string {
   console.log(usuarios[posicion].nombre + " se ha desconectado")
@@ -153,23 +158,29 @@ app.post('/noRepudio', (req, res) => {
   })
 })
 
-app.get('/cifradoHomomorfico', async function(req, res) {
-  const paillierBigint = require('paillier-bigint');
-  const { publicKeyPaillier, privateKeyPaillier } = await paillierBigint.generateRandomKeys(3072)
-  const m1: bigint = 10n;
-  const m2: bigint = 5n;
+app.post('/votar', async function(req, res) {
+  if (numVotos < 99){
+    const cifradoHex: string = req.body.voto;
+    console.log("Voto Recibido: " + cifradoHex);
+    const votoCifrado: bigint = bigintConversion.hexToBigint(cifradoHex);
+    votos = publicKeyPailler.addition(votoCifrado, votos);
+    const recuento: bigint = privateKeyPailler.decrypt(votos)
+    console.log("Recuento: " + recuento);
+    numVotos = numVotos + 1;
+    const recuentoHex: string = bigintConversion.bigintToHex(recuento)
+    const io = require('./sockets').getSocket();
+    io.emit('recuento', recuentoHex);
+    res.json({
+      recuento: recuentoHex
+    })
+  }
 
-  const c1 = publicKeyPaillier.encrypt(m1)
-  const c2 = publicKeyPaillier.encrypt(m2)
-  const encryptedSum = publicKeyPaillier.addition(c1, c2)
-  console.log(privateKeyPaillier.decrypt("encriptado: " + encryptedSum))
-
-  const k = 10n
-  const encryptedMul = publicKeyPaillier.multiply(c1, k)
-  console.log(privateKeyPaillier.decrypt(encryptedMul))
-  res.json({
-    mensaje: "EN PROCESO"
-  })
+  else{
+    res.json({
+      mensaje: "Se ha llegado al número máximo de votantes",
+      recuento: bigintConversion.bigintToHex(votos)
+    })
+  }
 })
 
 app.get('/secretoCompartido', function (req, res) {
@@ -205,12 +216,22 @@ app.get('/secretoCompartido', function (req, res) {
 })
 
 app.get('/rsa', async function (req, res) {
-  if (keyRSA === undefined)
-    keyRSA = await rsa.generateKeys(2048)
+  const paillierBigint = require('paillier-bigint');
 
+  if (keyRSA === undefined){
+    keyRSA = await rsa.generateKeys(2048)
+    const { publicKey, privateKey } = await paillierBigint.generateRandomKeys(3072)
+    publicKeyPailler = publicKey;
+    privateKeyPailler = privateKey;
+    const iniciarVoto: bigint = 0n;
+    votos = publicKeyPailler.encrypt(iniciarVoto);
+  }
+    
   res.json({
     eHex: bigintConversion.bigintToHex(keyRSA.publicKey.e),
-    nHex: bigintConversion.bigintToHex(keyRSA.publicKey.n)
+    nHex: bigintConversion.bigintToHex(keyRSA.publicKey.n),
+    nPaillierHex: bigintConversion.bigintToHex(publicKeyPailler.n),
+    gPaillierHex: bigintConversion.bigintToHex(publicKeyPailler.g)
   })
 })
 

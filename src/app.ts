@@ -185,6 +185,7 @@ app.post('/votar', async function(req, res) {
 
 app.post('/getClavesCompartidas', function (req, res) {
   const sss = require('shamirs-secret-sharing');
+  console.log("Secreto Recibido: " + req.body.secreto);
   const secreto: Buffer = bigintConversion.textToBuf(req.body.secreto) as Buffer; 
   const shares: Buffer[] = sss.split(secreto, { shares: req.body.shared, threshold: req.body.threshold});
   const sharesHex: string[] = [];
@@ -192,18 +193,22 @@ app.post('/getClavesCompartidas', function (req, res) {
     sharesHex.push(bigintConversion.bufToHex(share));
   })
 
+  console.log("Claves Enviadas: " + sharesHex);
+
   res.json(sharesHex)
 })
 
 app.post('/recuperarSecreto', function(req, res) {
   const sss = require('shamirs-secret-sharing');
   const sharesRecuperadasHex: string[] = req.body.claves;
+  console.log("Claves Recibidas: " + sharesRecuperadasHex);
   const sharesRecuperadas: Buffer[] = [];
   sharesRecuperadasHex.forEach((shareHex: string) => {
     sharesRecuperadas.push(bigintConversion.hexToBuf(shareHex) as Buffer)
   });
 
   const secreto = sss.combine(sharesRecuperadas);
+  console.log("Secreto Recuperado: " + bigintConversion.bufToText(secreto));
   res.json(bigintConversion.bufToText(secreto));
 })
 
